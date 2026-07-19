@@ -11,10 +11,18 @@
         header { text-align: center; margin-bottom: 30px; }
         header h1 { font-size: 1.8rem; color: var(--main-color); text-shadow: 0 0 8px var(--main-color); margin-bottom: 6px; }
         header p { color: #828292; font-size: 0.95rem; }
-        .market-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 950px; width: 100%; }
-        .card { background: #14141c; border: 1px solid #20202c; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.25s ease, border-color 0.25s ease; }
+        
+        .market-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 950px; width: 100%; min-height: 320px; }
+        
+        .card { background: #14141c; border: 1px solid #20202c; border-radius: 12px; overflow: hidden; display: none; flex-direction: column; transition: transform 0.25s ease, border-color 0.25s ease; }
+        .card.active { display: flex; }
         .card:hover { transform: translateY(-3px); border-color: var(--main-color); box-shadow: 0 6px 12px var(--main-color); }
-        .card-image { height: 140px; background: #1b1b26; display: flex; align-items: center; justify-content: center; color: #44445c; font-weight: 600; font-size: 0.85rem; letter-spacing: 1px; }
+        
+        /* Картинка теперь видна ПОЛНОСТЬЮ без обрезки */
+        .card-image-wrapper { height: 140px; background: #1b1b26; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+        .card-image { width: 100%; height: 100%; object-fit: contain; background-color: #09090d; }
+        .card-placeholder { color: #44445c; font-weight: 600; font-size: 0.85rem; letter-spacing: 1px; }
+        
         .card-content { padding: 16px; display: flex; flex-direction: column; flex-grow: 1; }
         .card-title { font-size: 1.1rem; margin-bottom: 8px; color: #ffffff; }
         .card-description { font-size: 0.85rem; color: #9090a2; line-height: 1.4; margin-bottom: 16px; flex-grow: 1; }
@@ -22,6 +30,13 @@
         .price { font-size: 1.15rem; font-weight: 700; color: var(--main-color); }
         .buy-button { background: #0088cc; color: #ffffff; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 0.85rem; transition: background 0.2s; }
         .buy-button:hover { background: #0099e6; }
+        
+        /* Кнопки перелистывания страниц */
+        .pagination-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 30px; width: 100%; }
+        .page-btn { background: #14141c; border: 1px solid #20202c; color: #ffffff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s; }
+        .page-btn:hover:not(:disabled) { border-color: var(--main-color); color: var(--main-color); }
+        .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        #page-info { font-size: 0.9rem; color: #828292; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -29,9 +44,11 @@
         <h1>Магазин трехмерной графики</h1>
         <p>Выберите нужную услугу или готовую модель для вашего проекта</p>
     </header>
-    <div class="market-container">
+    
+    <div class="market-container" id="market-grid">
+        <!-- Твои товары добавляются сюда -->
         <div class="card">
-            <div class="card-image">LOW-POLY / GAME READY</div>
+            <div class="card-image-wrapper"><div class="card-placeholder">LOW-POLY / GAME READY</div></div>
             <div class="card-content">
                 <h3 class="card-title">Игровой персонаж</h3>
                 <p class="card-description">Создание оптимизированной Low-Poly модели по вашему концепту.</p>
@@ -42,12 +59,56 @@
             </div>
         </div>
     </div>
+
+    <!-- Блок пагинации (страниц) -->
+    <div class="pagination-container">
+        <button class="page-btn" id="prev-btn" onclick="changePage(-1)">Назад</button>
+        <span id="page-info">Страница 1 из 1</span>
+        <button class="page-btn" id="next-btn" onclick="changePage(1)">Вперед</button>
+    </div>
+
     <script>
+        const ITEMS_PER_PAGE = 6; // Сколько товаров отображать на одной странице
+        let currentPage = 1;
+
+        function renderPagination() {
+            const grid = document.getElementById('market-grid');
+            const cards = Array.from(grid.getElementsByClassName('card'));
+            const totalItems = cards.length;
+            const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            cards.forEach((card, index) => {
+                const start = (currentPage - 1) * ITEMS_PER_PAGE;
+                const end = start + ITEMS_PER_PAGE;
+                if (index >= start && index < end) {
+                    card.classList.add('active');
+                } else {
+                    card.classList.remove('active');
+                }
+            });
+
+            document.getElementById('page-info').innerText = `Страница ${currentPage} из ${totalPages}`;
+            document.getElementById('prev-btn').disabled = currentPage === 1;
+            document.getElementById('next-btn').disabled = currentPage === totalPages;
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            renderPagination();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function orderService(serviceName, price) {
             const tg = 'UnityAssetBundleExtractorAvaloni';
             const text = `Привет! Хочу заказать услугу "${serviceName}" (от ${price} руб).`;
             window.open(`https://t.me/${tg}?text=${encodeURIComponent(text)}`, '_blank');
         }
+
+        // Запуск пагинации при загрузке страницы
+        document.addEventListener('DOMContentLoaded', renderPagination);
     </script>
 </body>
 </html>
