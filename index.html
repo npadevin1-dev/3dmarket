@@ -10,7 +10,7 @@
         body { background-color: #0e0e12; color: #e0e0e6; padding: 20px 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; justify-content: space-between; }
         
         header { text-align: center; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; }
-        header h1 { font-size: 1.8rem; color: var(--main-color); text-shadow: 0 0 10px var(--main-color); margin-bottom: 6px; }
+        header h1 { font-size: 1.5rem; white-space: nowrap; color: var(--main-color); text-shadow: 0 0 10px var(--main-color); margin-bottom: 6px; }
         header p { color: #828292; font-size: 0.9rem; }
         
         /* Контейнер для слайдера */
@@ -144,7 +144,7 @@
         });
 
         function orderService(title, price) {
-            const tg = 'UnityAssetBundleExtractorAvaloni';
+            const tg = 'thirddmarketgit';
             const text = `Привет! Я хочу купить товар: "${title}" по цене: ${price}`;
             window.open(`https://t.me/${tg}?text=${encodeURIComponent(text)}`, '_blank');
         }
