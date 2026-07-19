@@ -7,119 +7,153 @@
     <style>
         :root { --main-color: #00ffcc; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body { background-color: #0e0e12; color: #e0e0e6; padding: 25px 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        header { text-align: center; margin-bottom: 30px; }
-        header h1 { font-size: 1.8rem; color: var(--main-color); text-shadow: 0 0 8px var(--main-color); margin-bottom: 6px; }
-        header p { color: #828292; font-size: 0.95rem; }
+        body { background-color: #0e0e12; color: #e0e0e6; padding: 20px 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; justify-content: space-between; }
         
-        .market-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; max-width: 950px; width: 100%; min-height: 320px; }
+        header { text-align: center; margin-bottom: 20px; }
+        header h1 { font-size: 1.8rem; color: var(--main-color); text-shadow: 0 0 10px var(--main-color); margin-bottom: 6px; }
+        header p { color: #828292; font-size: 0.9rem; }
         
-        .card { background: #14141c; border: 1px solid #20202c; border-radius: 12px; overflow: hidden; display: none; flex-direction: column; transition: transform 0.25s ease, border-color 0.25s ease; }
-        .card.active { display: flex; }
-        .card:hover { transform: translateY(-3px); border-color: var(--main-color); box-shadow: 0 6px 12px var(--main-color); }
+        /* Контейнер для слайдера */
+        .slider-wrapper { width: 100%; max-width: 360px; position: relative; overflow: hidden; flex-grow: 1; display: flex; align-items: center; }
+        .market-container { display: flex; width: 100%; transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
         
-        /* Картинка теперь видна ПОЛНОСТЬЮ без обрезки */
-        .card-image-wrapper { height: 140px; background: #1b1b26; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+        /* Карточка товара как отдельный слайд */
+        .card { min-width: 100%; width: 100%; padding: 5px; background: #14141c; border: 2px solid #20202c; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.3s, box-shadow 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .card.active-slide { border-color: var(--main-color); box-shadow: 0 0 15px var(--main-color); }
+        
+        /* Картинка на всю ширину карточки, без обрезки важных деталей */
+        .card-image-wrapper { width: 100%; height: 230px; background: #1b1b26; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0; }
         .card-image { width: 100%; height: 100%; object-fit: contain; background-color: #09090d; }
-        .card-placeholder { color: #44445c; font-weight: 600; font-size: 0.85rem; letter-spacing: 1px; }
+        .card-placeholder { color: #44445c; font-weight: 600; font-size: 0.9rem; letter-spacing: 1px; }
         
-        .card-content { padding: 16px; display: flex; flex-direction: column; flex-grow: 1; }
-        .card-title { font-size: 1.1rem; margin-bottom: 8px; color: #ffffff; }
-        .card-description { font-size: 0.85rem; color: #9090a2; line-height: 1.4; margin-bottom: 16px; flex-grow: 1; }
-        .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
-        .price { font-size: 1.15rem; font-weight: 700; color: var(--main-color); }
-        .buy-button { background: #0088cc; color: #ffffff; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 0.85rem; transition: background 0.2s; }
+        .card-content { padding: 20px 15px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
+        .card-title { font-size: 1.3rem; margin-bottom: 10px; color: #ffffff; }
+        .card-description { font-size: 0.9rem; color: #9090a2; line-height: 1.5; margin-bottom: 20px; }
+        .card-footer { display: flex; align-items: center; justify-content: space-between; }
+        
+        .price { font-size: 1.3rem; font-weight: 700; color: var(--main-color); }
+        .buy-button { background: #0088cc; color: #ffffff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.95rem; transition: background 0.2s; }
         .buy-button:hover { background: #0099e6; }
         
-        /* Кнопки перелистывания страниц */
-        .pagination-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 30px; width: 100%; }
-        .page-btn { background: #14141c; border: 1px solid #20202c; color: #ffffff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s; }
-        .page-btn:hover:not(:disabled) { border-color: var(--main-color); color: var(--main-color); }
-        .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        #page-info { font-size: 0.9rem; color: #828292; font-weight: 600; }
+        /* Индикаторы точек (пагинация) */
+        .dots-container { display: flex; justify-content: center; gap: 8px; margin-top: 20px; margin-bottom: 10px; }
+        .dot { width: 8px; height: 8px; background: #323244; border-radius: 50%; transition: all 0.3s; }
+        .dot.active { background: var(--main-color); transform: scale(1.3); box-shadow: 0 0 6px var(--main-color); }
     </style>
 </head>
 <body>
     <header>
         <h1>Магазин трехмерной графики</h1>
-        <p>Выберите нужную услугу или готовую модель для вашего проекта</p>
+        <p>Листайте влево/вправо для просмотра моделей</p>
     </header>
     
-    <div class="market-container" id="market-grid">
-        <div class="card">
-        <div class="card">
-            <div class="card-image-wrapper"><img src="images/IMG_20260719_120331_595.jpg" alt="Анархо-Олень" class="card-image"></div>
-            <div class="card-content">
-                <h3 class="card-title">Анархо-Олень</h3>
-                <p class="card-description">Модель оленя</p>
-                <div class="card-footer">
-                    <span class="price">2000</span>
-                    <button class="buy-button" onclick="orderService('Анархо-Олень', '2000')">Заказать</button>
-                </div>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-image-wrapper"><div class="card-placeholder">LOW-POLY / GAME READY</div></div>
-            <div class="card-content">
-                <h3 class="card-title">Игровой персонаж</h3>
-                <p class="card-description">Создание оптимизированной Low-Poly модели по вашему концепту.</p>
-                <div class="card-footer">
-                    <span class="price">от 4 000 ₽</span>
-                    <button class="buy-button" onclick="orderService('Игровой персонаж', '4000')">Заказать</button>
+    <div class="slider-wrapper" id="slider-zone">
+        <div class="market-container" id="market-grid">
+            <!-- Сюда админка будет пихать товары. Оставим пока Анархо-Оленя базовым -->
+            <div class="card">
+                <div class="card-image-wrapper"><div class="card-placeholder">LOW-POLY / GAME READY</div></div>
+                <div class="card-content">
+                    <h3 class="card-title">Анархо-Олень</h3>
+                    <p class="card-description">Модель оленя.</p>
+                    <div class="card-footer">
+                        <span class="price">2000 ₽</span>
+                        <button class="buy-button" onclick="orderService('Анархо-Олень', '2000 ₽')">Заказать</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Блок пагинации (страниц) -->
-    <div class="pagination-container">
-        <button class="page-btn" id="prev-btn" onclick="changePage(-1)">Назад</button>
-        <span id="page-info">Страница 1 из 1</span>
-        <button class="page-btn" id="next-btn" onclick="changePage(1)">Вперед</button>
-    </div>
+    <div class="dots-container" id="dots-block"></div>
 
     <script>
-        const ITEMS_PER_PAGE = 6; // Сколько товаров отображать на одной странице
-        let currentPage = 1;
+        let currentIndex = 0;
+        const container = document.getElementById('market-grid');
+        const sliderZone = document.getElementById('slider-zone');
+        const dotsBlock = document.getElementById('dots-block');
+        
+        let startX = 0;
+        let currentX = 0;
+        let isMoving = false;
 
-        function renderPagination() {
-            const grid = document.getElementById('market-grid');
-            const cards = Array.from(grid.getElementsByClassName('card'));
-            const totalItems = cards.length;
-            const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
-
-            if (currentPage > totalPages) currentPage = totalPages;
-            if (currentPage < 1) currentPage = 1;
-
-            cards.forEach((card, index) => {
-                const start = (currentPage - 1) * ITEMS_PER_PAGE;
-                const end = start + ITEMS_PER_PAGE;
-                if (index >= start && index < end) {
-                    card.classList.add('active');
+        function updateSlider() {
+            const cards = Array.from(container.getElementsByClassName('card'));
+            if (cards.length === 0) return;
+            
+            // Защита от вылета за границы
+            if (currentIndex >= cards.length) currentIndex = cards.length - 1;
+            if (currentIndex < 0) currentIndex = 0;
+            
+            // Сдвигаем контейнер ровно на ширину текущего слайда
+            container.style.transform = `translateX(-${currentIndex * 100}%)`;
+            
+            // Подсвечиваем активную карточку неоном
+            cards.forEach((card, idx) => {
+                if (idx === currentIndex) {
+                    card.classList.add('active-slide');
                 } else {
-                    card.classList.remove('active');
+                    card.classList.remove('active-slide');
                 }
             });
-
-            document.getElementById('page-info').innerText = `Страница ${currentPage} из ${totalPages}`;
-            document.getElementById('prev-btn').disabled = currentPage === 1;
-            document.getElementById('next-btn').disabled = currentPage === totalPages;
+            
+            // Обновляем точки внизу
+            const dots = Array.from(dotsBlock.getElementsByClassName('dot'));
+            dots.forEach((dot, idx) => {
+                if (idx === currentIndex) dot.classList.add('active');
+                else dot.classList.remove('active');
+            });
         }
 
-        function changePage(direction) {
-            currentPage += direction;
-            renderPagination();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        function createDots() {
+            dotsBlock.innerHTML = '';
+            const cardsCount = container.getElementsByClassName('card').length;
+            for (let i = 0; i < cardsCount; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                if (i === 0) dot.classList.add('active');
+                dotsBlock.appendChild(dot);
+            }
         }
 
-        function orderService(serviceName, price) {
+        // Обработка тач-событий (свайпы пальцем)
+        sliderZone.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isMoving = true;
+        });
+
+        sliderZone.addEventListener('touchmove', (e) => {
+            if (!isMoving) return;
+            currentX = e.touches[0].clientX;
+        });
+
+        sliderZone.addEventListener('touchend', () => {
+            if (!isMoving) return;
+            isMoving = false;
+            let diffX = startX - currentX;
+            
+            // Если свайпнули достаточно сильно (больше 50 пикселей)
+            if (Math.abs(diffX) > 50 && currentX !== 0) {
+                if (diffX > 0) {
+                    currentIndex++; // Свайп влево -> следующий товар
+                } else {
+                    currentIndex--; // Свайп вправо -> предыдущий товар
+                }
+                updateSlider();
+            }
+            currentX = 0;
+        });
+
+        function orderService(title, price) {
             const tg = 'UnityAssetBundleExtractorAvaloni';
-            const text = `Привет! Хочу заказать услугу "${serviceName}" (от ${price} руб).`;
+            const text = `Привет! Я хочу купить товар: "${title}" по цене: ${price}`;
             window.open(`https://t.me/${tg}?text=${encodeURIComponent(text)}`, '_blank');
         }
 
-        // Запуск пагинации при загрузке страницы
-        document.addEventListener('DOMContentLoaded', renderPagination);
+        // Инициализация при старте
+        document.addEventListener('DOMContentLoaded', () => {
+            createDots();
+            updateSlider();
+        });
     </script>
 </body>
 </html>
